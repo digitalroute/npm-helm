@@ -1,0 +1,7 @@
+{
+  "name": "@digitalroute/npm-helm",
+  "version": "0.0.1",
+  "bin": {
+    "dazzlerjs-npm-helm": "scripts/helm.sh"
+  }
+}
