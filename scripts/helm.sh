@@ -62,16 +62,8 @@ for type in "$@"; do
     docker-build)
       echo "Building docker image ${npm_package_helm_imageRepository}:${version}"
       build_arg=""
-      if [ -n "${npm_package_helm_tokenScope-}" ]; then
-        registry="$(npm config get ${npm_package_helm_tokenScope}:registry)"
-        if [ "${registry}" != "undefined" ]; then
-          r=$(echo $registry | sed -e 's/^https://' -e 's/^http://')
-          token=$(grep "^${r}:_authToken" ~/.npmrc | cut -d '=' -f 2)
-          build_arg="--build-arg NPM_TOKEN=${token}"
-        fi
-      fi
-      if [ -n "${NPM_TOKEN-}" ]; then
-        build_arg="--build-arg NPM_TOKEN=${NPM_TOKEN}"
+      if [ -n "${GITHUB_TOKEN-}" ]; then
+        build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
       fi
       docker build ${build_arg} --tag ${npm_package_helm_imageRepository}:${version} ${base_dir}
       mkdir -p ${output_dir}
