@@ -20,12 +20,17 @@ if [ -z "${npm_package_name-}" ] || [ -z "${npm_package_version-}" ] || [ -z "${
   exit 1
 fi
 
+if [ -z "${INIT_CWD-}" ]; then
+  echo "Missing INIT_CWD variable needed to find base directory"
+  exit 1
+fi
+
 if [[ $1 == "" ]]; then
   echo "Need to supply type (docker-build, docker-push, package, push, install)"
   exit 1
 fi
 
-base_dir=$(git rev-parse --show-toplevel)
+base_dir=${INIT_CWD}
 output_dir="${base_dir}/output"
 helm_dir="${base_dir}/helm/${npm_package_helm_name}"
 
