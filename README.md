@@ -13,6 +13,8 @@ And add the following parts to your package.json
 ```
   "helm": {
     "name": "stuff",
+    "repository": "dazzlerjs",
+    "namespace": "dazzlerjs",
     "imageRepository": "1234567890.dkr.ecr.eu-west-1.amazonaws.com/repo/stuff",
     "
   },

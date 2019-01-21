@@ -14,11 +14,17 @@ function get_version() {
   fi
 }
 
-if [ -z "${npm_package_name-}" ] || [ -z "${npm_package_version-}" ] || [ -z "${npm_package_helm_imageRepository-}" ] || [ -z "${npm_package_helm_name-}" ] ; then
-  echo "Missing NPM environment variables"
-  echo "You need to run this script through npm"
-  exit 1
-fi
+function check_npm_var() {
+  local var=$1
+  if [ -z "${!var-}" ]; then
+    echo "Variable $var is not set, do this using your package.json"
+    exit 1
+  fi
+}
+
+for var in npm_package_name npm_package_version npm_package_helm_imageRepository npm_package_helm_name npm_package_helm_repository npm_package_helm_namespace; do
+  check_npm_var $var
+done
 
 if [ -z "${INIT_CWD-}" ]; then
   echo "Missing INIT_CWD variable needed to find base directory"
@@ -89,12 +95,12 @@ for type in "$@"; do
 
     push)
       echo "Pushing helm chart for version ${version}"
-      helm s3 push ${output_dir}/${npm_package_helm_name}-${version}.tgz dazzlerjs
+      helm s3 push ${output_dir}/${npm_package_helm_name}-${version}.tgz ${npm_package_helm_repository}
       ;;
 
     install)
       echo "Installing helm chart with version ${version}"
-      helm upgrade --install ${npm_package_helm_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace dazzlerjs --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version}
+      helm upgrade --install ${npm_package_helm_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version}
       ;;
 
     *)
