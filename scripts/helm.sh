@@ -40,6 +40,12 @@ base_dir=${INIT_CWD}
 output_dir="${base_dir}/output"
 helm_dir="${base_dir}/helm/${npm_package_helm_name}"
 
+HELM_VERBOSE=""
+if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" == "true" ]; then
+  echo "Helm verbose mode set to true"
+  HELM_VERBOSE="--debug"
+fi
+
 context=$(kubectl config current-context 2>/dev/null || true)
 
 case $context in
@@ -90,7 +96,7 @@ for type in "$@"; do
       echo "Creating helm chart for version ${version}"
       helm lint ${helm_dir}/
       mkdir -p ${output_dir}
-      helm package ${helm_dir}/ --destination ${output_dir} --version ${version}
+      helm package ${helm_dir}/ --destination ${output_dir} --version ${version} ${HELM_VERBOSE}
       ;;
 
     push)
@@ -100,7 +106,7 @@ for type in "$@"; do
 
     install)
       echo "Installing helm chart with version ${version}"
-      helm upgrade --install ${npm_package_helm_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version}
+      helm upgrade --install ${npm_package_helm_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE}
       ;;
 
     *)

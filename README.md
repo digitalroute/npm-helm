@@ -16,7 +16,7 @@ And add the following parts to your package.json
     "repository": "dazzlerjs",
     "namespace": "dazzlerjs",
     "imageRepository": "1234567890.dkr.ecr.eu-west-1.amazonaws.com/repo/stuff",
-    "
+    "verbose": "true"
   },
   "scripts": {
     "helm": "npm-helm docker-build package install",
