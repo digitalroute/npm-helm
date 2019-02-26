@@ -47,14 +47,25 @@ if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" ==
 fi
 
 context=$(kubectl config current-context 2>/dev/null || true)
+context_any=${HELM_CONTEXT_ANY:-false}
+if [ "${context_any}" != "true" ] && [ "${context}" != "minikube" ]; then
+  echo "Kubernetes context needs to be set to minikube, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using HELM_CONTEXT_ANY=true."
+  exit 1
+fi
 
 case $context in
   minikube)
+    echo "Context set to minikube!"
+    minikube status
+    if [ $? != 0 ]; then
+      echo "Minikube seems offline, exiting..."
+      exit 1
+    fi
     eval $(minikube docker-env)
     ENV="minikube"
-    echo "Running in minikube!"
     ;;
   *)
+    echo "Context set to $context"
     if [ -z "${ENV-}" ]; then
       ENV="dev"
     fi
