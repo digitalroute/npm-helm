@@ -46,6 +46,9 @@ if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" ==
   HELM_VERBOSE="--debug"
 fi
 
+# HELM_REPOSITORY overrides repository from package.json
+npm_package_helm_repository=${HELM_REPOSITORY:-${npm_package_helm_repository}}
+
 context=$(kubectl config current-context 2>/dev/null || true)
 context_any=${HELM_CONTEXT_ANY:-false}
 if [ "${context_any}" != "true" ] && [ "${context}" != "minikube" ]; then
