@@ -122,8 +122,15 @@ for type in "$@"; do
       ;;
 
     install)
-      echo "Installing helm chart with version ${version}"
-      helm upgrade --install ${npm_package_helm_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE}
+      helm_release_prefix=${HELM_RELEASE_PREFIX:-}
+      if [ "${helm_release_prefix}" != "" ]; then
+        helm_release_name="${helm_release_prefix}-${npm_package_helm_name}"
+      else
+        helm_release_name="${npm_package_helm_name}"
+      fi
+
+      echo "Installing helm chart with release-name=${helm_release_name}, version=${version}"
+      helm upgrade --install ${helm_release_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE}
       ;;
 
     *)
