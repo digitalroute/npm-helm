@@ -5,7 +5,7 @@ Helm helper module for nodejs
 Like usual:
 
 ```
-npm install github:digitalroute/npm-helm#v0.0.5 --save-dev
+npm install github:digitalroute/npm-helm#v0.3.0 --save-dev
 ```
 
 And add the following parts to your package.json

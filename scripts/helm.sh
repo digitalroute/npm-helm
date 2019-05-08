@@ -49,6 +49,9 @@ fi
 # HELM_REPOSITORY overrides repository from package.json
 npm_package_helm_repository=${HELM_REPOSITORY:-${npm_package_helm_repository}}
 
+# HELM_NAMESPACE overrides repository from package.json
+npm_package_helm_namespace=${HELM_NAMESPACE:-${npm_package_helm_namespace}}
+
 context=$(kubectl config current-context 2>/dev/null || true)
 context_any=${HELM_CONTEXT_ANY:-false}
 if [ "${context_any}" != "true" ] && [ "${context}" != "minikube" ]; then
