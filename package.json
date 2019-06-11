@@ -1,7 +1,21 @@
 {
-  "name": "@digitalroute/npm-helm",
-  "version": "0.4.0",
+  "name": "npm-helm",
+  "version": "0.0.0-semantically-released",
   "bin": {
     "npm-helm": "scripts/helm.sh"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "scripts": {
+    "commit": "git-cz",
+    "semantic-release": "semantic-release"
+  },
+  "devDependencies": {
+    "commitizen": "^3.1.1",
+    "cz-conventional-changelog": "^2.1.0",
+    "semantic-release": "^15.13.12"
   }
 }

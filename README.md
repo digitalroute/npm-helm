@@ -1,11 +1,13 @@
 # npm-helm
+
 Helm helper module for nodejs
 
 ## Usage
+
 Like usual:
 
 ```
-npm install github:digitalroute/npm-helm#v0.3.0 --save-dev
+npm install npm-helm
 ```
 
 And add the following parts to your package.json
@@ -27,4 +29,3 @@ And add the following parts to your package.json
     "helm:push": "npm-helm push"
   },
 ```
-
