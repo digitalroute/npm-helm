@@ -48,6 +48,9 @@ if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" ==
   HELM_VERBOSE="--debug"
 fi
 
+# HELM_EXTRA_SET can be used to inject --set to helm upgrade
+helm_extra_set=${HELM_EXTRA_SET:-}
+
 # HELM_REPOSITORY overrides repository from package.json
 npm_package_helm_repository=${HELM_REPOSITORY:-${npm_package_helm_repository}}
 
@@ -93,7 +96,7 @@ if test -f ${helm_dir}/values-${ENV}.yaml; then
   values="--values ${helm_dir}/values-${ENV}.yaml"
 fi
 
-echo "Using version=${version}, ENV=${ENV}, values=${values}"
+echo "Using version=${version}, ENV=${ENV}, values=${values}, helm_extra_set=${helm_extra_set}"
 
 set -u
 set -e
@@ -138,7 +141,7 @@ for type in "$@"; do
       fi
 
       echo "Installing helm chart with release-name=${helm_release_name}, version=${version}"
-      helm upgrade --install ${helm_release_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE}
+      helm upgrade --install ${helm_release_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE} ${helm_extra_set}
       ;;
 
     *)
