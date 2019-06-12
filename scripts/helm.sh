@@ -9,6 +9,8 @@ function get_version() {
     echo "${npm_package_version}-${BUILD_ID}.$(git log -n 1 --pretty=format:'%h')"
   elif [ "${ENV}" == "minikube" ]; then
     echo "${npm_package_version}-minikube"
+  elif [ "${ENV}" == "docker-for-desktop" ]; then
+    echo "${npm_package_version}-docker"
   else
     echo "${npm_package_version}-$(git log -n 1 --pretty=format:'%h')"
   fi
@@ -54,9 +56,11 @@ npm_package_helm_namespace=${HELM_NAMESPACE:-${npm_package_helm_namespace}}
 
 context=$(kubectl config current-context 2>/dev/null || true)
 context_any=${HELM_CONTEXT_ANY:-false}
-if [ "${context_any}" != "true" ] && [ "${context}" != "minikube" ]; then
-  echo "Kubernetes context needs to be set to minikube, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using HELM_CONTEXT_ANY=true."
-  exit 1
+if [ "${context_any}" != "true" ]; then
+  if [ "${context}" != "minikube" ] && [ "${context}" != "docker-for-desktop" ]; then
+    echo "Kubernetes context needs to be set to minikube or docker-for-desktop, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using HELM_CONTEXT_ANY=true."
+    exit 1
+  fi
 fi
 
 case $context in
@@ -69,6 +73,10 @@ case $context in
     fi
     eval $(minikube docker-env)
     ENV="minikube"
+    ;;
+  docker-for-desktop)
+    echo "Context set to docker-for-desktop!"
+    ENV="docker-for-desktop"
     ;;
   *)
     echo "Context set to $context"

@@ -1,6 +1,6 @@
 {
-  "name": "npm-helm",
-  "version": "0.0.0-semantically-released",
+  "name": "@digitalroute/npm-helm",
+  "version": "0.6.0",
   "bin": {
     "npm-helm": "scripts/helm.sh"
   },
