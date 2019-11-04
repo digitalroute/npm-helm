@@ -101,6 +101,16 @@ echo "Using version=${version}, ENV=${ENV}, values=${values}, helm_extra_set=${h
 set -u
 set -e
 
+mkdir -p ${output_dir}
+
+cat <<EOF >${output_dir}/npm-helm-info.yaml
+helm:
+  version: ${version}
+  name: ${npm_package_helm_name}
+  file: ${npm_package_helm_name}-${version}.tgz
+  dockerImage: ${npm_package_helm_imageRepository}:${version}
+EOF
+
 for type in "$@"; do
   echo "Doing $type"
   case $type in
@@ -111,7 +121,6 @@ for type in "$@"; do
         build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
       fi
       docker build ${build_arg} --tag ${npm_package_helm_imageRepository}:${version} ${base_dir}
-      mkdir -p ${output_dir}
       echo "${npm_package_helm_imageRepository}:${version}" > ${output_dir}/docker-image.txt
       ;;
 
@@ -123,7 +132,6 @@ for type in "$@"; do
     package)
       echo "Creating helm chart for version ${version}"
       helm lint ${helm_dir}/
-      mkdir -p ${output_dir}
       helm package ${helm_dir}/ --destination ${output_dir} --version ${version} ${HELM_VERBOSE}
       ;;
 
