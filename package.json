@@ -14,7 +14,7 @@
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
-    "commitizen": "^3.1.1",
+    "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^2.1.0",
     "semantic-release": "^15.13.19"
   },
