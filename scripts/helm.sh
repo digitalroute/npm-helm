@@ -120,6 +120,9 @@ for type in "$@"; do
       if [ -n "${GITHUB_TOKEN-}" ]; then
         build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
       fi
+      if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
+        build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
+      fi
       docker build ${build_arg} --tag ${npm_package_helm_imageRepository}:${version} ${base_dir}
       echo "${npm_package_helm_imageRepository}:${version}" > ${output_dir}/docker-image.txt
       ;;
