@@ -4,17 +4,13 @@
   "bin": {
     "npm-helm": "scripts/helm.sh"
   },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
   "scripts": {
     "commit": "git-cz",
     "prettier": "prettier --write \"**/*.{js,ts,json,md,yml}\"",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
+    "@digitalroute/cz-conventional-changelog-for-jira": "^4.1.4",
     "@digitalroute/prettier-config": "^1.2.0",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^2.1.0",
@@ -28,5 +24,11 @@
       "@semantic-release/release-notes-generator",
       "@semantic-release/npm"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
+      "jiraMode": false
+    }
   }
 }
