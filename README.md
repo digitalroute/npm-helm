@@ -6,13 +6,13 @@ Helm helper module for nodejs
 
 Like usual:
 
-```
+```bash
 npm install npm-helm
 ```
 
 And add the following parts to your package.json
 
-```
+```jsonc
   "helm": {
     "name": "stuff",
     "repository": "dazzlerjs",
