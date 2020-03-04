@@ -11,13 +11,17 @@
   },
   "scripts": {
     "commit": "git-cz",
+    "prettier": "prettier --write \"**/*.{js,ts,json,md,yml}\"",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
+    "@digitalroute/prettier-config": "^1.2.0",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^2.1.0",
+    "prettier": "^1.19.1",
     "semantic-release": "^15.13.19"
   },
+  "prettier": "@digitalroute/prettier-config",
   "release": {
     "plugins": [
       "@semantic-release/commit-analyzer",
