@@ -1,6 +1,6 @@
 {
   "name": "@digitalroute/npm-helm",
-  "version": "0.9.0",
+  "version": "0.0.0-semantically-released",
   "bin": {
     "npm-helm": "scripts/helm.sh"
   },
@@ -18,13 +18,6 @@
     "semantic-release": "^15.13.19"
   },
   "prettier": "@digitalroute/prettier-config",
-  "release": {
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/npm"
-    ]
-  },
   "config": {
     "commitizen": {
       "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
