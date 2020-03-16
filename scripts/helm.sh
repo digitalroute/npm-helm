@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -u
 
@@ -24,7 +24,7 @@ function check_npm_var() {
   fi
 }
 
-for var in npm_package_name npm_package_version npm_package_helm_imageRepository npm_package_helm_name npm_package_helm_repository npm_package_helm_namespace; do
+for var in npm_package_name npm_package_version npm_package_helm_name npm_package_helm_repository npm_package_helm_namespace; do
   check_npm_var $var
 done
 
@@ -91,6 +91,29 @@ esac
 
 version=$(get_version)
 
+docker_image=""
+declare -a alternative_docker_images
+
+if [ -n "${npm_package_helm_imageRepositories_0+x}" ]; then
+  docker_image="${npm_package_helm_imageRepositories_0}:${version}"
+  # Loop and try to find elements from helm.imageRepositories.[] in packages.json
+  for i in 1 2 3 4 5; do
+    var="npm_package_helm_imageRepositories_${i}"
+    if [ -z ${!var+x} ]; then
+      # No more variables found, from the packages.json array
+      break
+    fi
+    alternative_docker_images+=("${!var}:${version}")
+  done
+
+elif [ -n "${npm_package_helm_imageRepository+x}" ]; then
+  docker_image="${npm_package_helm_imageRepository}:${version}"
+
+else
+  echo "Missing helm docker image repository in package.json"
+  exit 1
+fi
+
 values=""
 if test -f ${helm_dir}/values-${ENV}.yaml; then
   values="--values ${helm_dir}/values-${ENV}.yaml"
@@ -103,19 +126,25 @@ set -e
 
 mkdir -p ${output_dir}
 
+alternativeDockerImages=""
+if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+  for i in "${alternative_docker_images[@]}"; do alternativeDockerImages+="$i,"; done
+fi
+
 cat <<EOF >${output_dir}/npm-helm-info.yaml
 helm:
   version: ${version}
   name: ${npm_package_helm_name}
   file: ${npm_package_helm_name}-${version}.tgz
-  dockerImage: ${npm_package_helm_imageRepository}:${version}
+  dockerImage: ${docker_image}
+  alternativeDockerImages: ${alternativeDockerImages}
 EOF
 
 for type in "$@"; do
   echo "Doing $type"
   case $type in
     docker-build)
-      echo "Building docker image ${npm_package_helm_imageRepository}:${version}"
+      echo "Building docker image ${docker_image}"
       build_arg=""
       if [ -n "${GITHUB_TOKEN-}" ]; then
         build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
@@ -123,13 +152,27 @@ for type in "$@"; do
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
         build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
       fi
-      docker build ${build_arg} --tag ${npm_package_helm_imageRepository}:${version} ${base_dir}
-      echo "${npm_package_helm_imageRepository}:${version}" > ${output_dir}/docker-image.txt
+      docker build ${build_arg} --tag ${docker_image} ${base_dir}
+      echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
+
+      # Create additional docker image tags if defined
+      if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+        for i in "${alternative_docker_images[@]}"; do
+          docker tag "${docker_image}" "$i"
+        done
+      fi
       ;;
 
     docker-push)
-      echo "Pushing docker image ${npm_package_helm_imageRepository}:${version}"
-      docker push ${npm_package_helm_imageRepository}:${version}
+      echo "Pushing docker image ${docker_image}"
+      docker push "${docker_image}"
+
+      # Push additional docker image tags if defined
+      if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+        for i in "${alternative_docker_images[@]}"; do
+          docker push "$i"
+        done
+      fi
       ;;
 
     package)

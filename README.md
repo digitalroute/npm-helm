@@ -7,7 +7,7 @@ Helm helper module for nodejs
 Like usual:
 
 ```bash
-npm install npm-helm
+npm install @digitalroute/npm-helm --save-dev
 ```
 
 And add the following parts to your package.json
@@ -17,8 +17,11 @@ And add the following parts to your package.json
     "name": "stuff",
     "repository": "dazzlerjs",
     "namespace": "dazzlerjs",
-    "imageRepository": "1234567890.dkr.ecr.eu-west-1.amazonaws.com/repo/stuff",
-    "verbose": "true"
+    // the old imageRepository is also supported but imageRepositories will take precedence
+    "imageRepositories": [
+      // support for multiple repositories, will push to all of them
+      "1234567890.dkr.ecr.eu-west-1.amazonaws.com/repo/stuff"
+    ],
   },
   "scripts": {
     "helm": "npm-helm docker-build package install",
