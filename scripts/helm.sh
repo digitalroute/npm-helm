@@ -127,7 +127,7 @@ set -e
 mkdir -p ${output_dir}
 
 alternativeDockerImages=""
-if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
   for i in "${alternative_docker_images[@]}"; do alternativeDockerImages+="$i,"; done
 fi
 
@@ -159,7 +159,7 @@ for type in "$@"; do
       echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
 
       # Create additional docker image tags if defined
-      if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+      if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
         for i in "${alternative_docker_images[@]}"; do
           docker tag "${docker_image}" "$i"
         done
@@ -171,7 +171,7 @@ for type in "$@"; do
       docker push "${docker_image}"
 
       # Push additional docker image tags if defined
-      if [ ${#alternative_docker_images[@]} -gt 0 ]; then
+      if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
         for i in "${alternative_docker_images[@]}"; do
           docker push "$i"
         done
