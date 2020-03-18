@@ -164,8 +164,8 @@ for type in "$@"; do
           exit 1
         fi
       fi
-      docker build ${build_arg} --tag ${docker_image} ${base_dir}
-      echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
+      docker build "${build_arg}" --tag "${docker_image} ${base_dir}"
+      echo "${docker_image}:${version}" > "${output_dir}/docker-image.txt"
 
       # Create additional docker image tags if defined
       if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
