@@ -48,6 +48,13 @@ if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" ==
   HELM_VERBOSE="--debug"
 fi
 
+NPM_HELM_DEBUG="false"
+if [ ! -z "${npm_package_helm_internalDebug-}" ] && [ "${npm_package_helm_internalDebug}" == "true" ]; then
+  echo "NPM Helm debug set to true which does set -x in shell"
+  NPM_HELM_DEBUG="true"
+  set -x
+fi
+
 # HELM_EXTRA_SET can be used to inject --set to helm upgrade
 helm_extra_set=${HELM_EXTRA_SET:-}
 
@@ -145,27 +152,30 @@ for type in "$@"; do
   case $type in
     docker-build)
       echo "Building docker image ${docker_image}"
-      build_arg=""
+      docker_build_arguments=("--tag" "${docker_image}")
       if [ -n "${GITHUB_TOKEN-}" ]; then
         echo "Found GITHUB_TOKEN"
-        build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
+        docker_build_arguments+=("--build-arg")
+        docker_build_arguments+=("GITHUB_TOKEN=${GITHUB_TOKEN}")
       fi
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
         echo "Found BITBUCKET_SSH_KEY"
-        build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
+        docker_build_arguments+=("--build-arg")
+        docker_build_arguments+=("BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}")
       fi
       if [ -n "${PATH_TO_BITBUCKET_SSH_KEY-}" ]; then
         if test -f "${PATH_TO_BITBUCKET_SSH_KEY-}"; then
           echo "Found PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY}"
           BITBUCKET_SSH_KEY=$(base64 "${PATH_TO_BITBUCKET_SSH_KEY}")
-          build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
+          docker_build_arguments+=("--build-arg")
+          docker_build_arguments+=("BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}")
         else
           echo "Error: PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY} is not a valid file"
           exit 1
         fi
       fi
-      docker build ${build_arg} --tag ${docker_image} ${base_dir}
-      echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
+      docker build "${docker_build_arguments[@]}" "${base_dir}"
+      echo "${docker_image}:${version}" > "${output_dir}/docker-image.txt"
 
       # Create additional docker image tags if defined
       if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
