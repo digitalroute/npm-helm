@@ -147,13 +147,22 @@ for type in "$@"; do
       echo "Building docker image ${docker_image}"
       build_arg=""
       if [ -n "${GITHUB_TOKEN-}" ]; then
+        echo "Found GITHUB_TOKEN"
         build_arg="--build-arg GITHUB_TOKEN=${GITHUB_TOKEN}"
       fi
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
+        echo "Found BITBUCKET_SSH_KEY"
         build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
       fi
       if [ -n "${PATH_TO_BITBUCKET_SSH_KEY-}" ]; then
-        build_arg="--build-arg BITBUCKET_SSH_KEY=$(cat ${PATH_TO_BITBUCKET_SSH_KEY} | base64)"
+        if test -f "${PATH_TO_BITBUCKET_SSH_KEY-}"; then
+          echo "Found PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY}"
+          BITBUCKET_SSH_KEY=$(base64 "${PATH_TO_BITBUCKET_SSH_KEY}")
+          build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
+        else
+          echo "Error: PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY} is not a valid file"
+          exit 1
+        fi
       fi
       docker build ${build_arg} --tag ${docker_image} ${base_dir}
       echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
