@@ -152,6 +152,9 @@ for type in "$@"; do
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
         build_arg="--build-arg BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}"
       fi
+      if [ -n "${PATH_TO_BITBUCKET_SSH_KEY-}" ]; then
+        build_arg="--build-arg BITBUCKET_SSH_KEY=$(cat ${PATH_TO_BITBUCKET_SSH_KEY} | base64)"
+      fi
       docker build ${build_arg} --tag ${docker_image} ${base_dir}
       echo "${docker_image}:${version}" > ${output_dir}/docker-image.txt
 
