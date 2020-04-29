@@ -4,7 +4,7 @@ set -u
 
 function get_version() {
   if [ -n "${VERSION-}" ]; then
-    echo ${VERSION}
+    echo "${VERSION}"
   elif [ -n "${BUILD_ID-}" ]; then
     echo "${npm_package_version}-${BUILD_ID}.$(git log -n 1 --pretty=format:'%h')"
   elif [ "${ENV}" == "minikube" ]; then
@@ -42,21 +42,14 @@ base_dir=${INIT_CWD}
 output_dir="${base_dir}/output"
 helm_dir="${base_dir}/helm/${npm_package_helm_name}"
 
-HELM_VERBOSE=""
-if [ ! -z "${npm_package_helm_verbose-}" ] && [ "${npm_package_helm_verbose}" == "true" ]; then
-  echo "Helm verbose mode set to true"
-  HELM_VERBOSE="--debug"
-fi
+npm_package_helm_binary=${HELM_BINARY:-${npm_package_helm_binary:-helm}}
 
-NPM_HELM_DEBUG="false"
-if [ ! -z "${npm_package_helm_internalDebug-}" ] && [ "${npm_package_helm_internalDebug}" == "true" ]; then
+npm_package_helm_verbose=${HELM_VERBOSE:-${npm_package_helm_verbose:-false}}
+
+if [ -n "${npm_package_helm_internalDebug-}" ] && [ "${npm_package_helm_internalDebug}" == "true" ]; then
   echo "NPM Helm debug set to true which does set -x in shell"
-  NPM_HELM_DEBUG="true"
   set -x
 fi
-
-# HELM_EXTRA_SET can be used to inject --set to helm upgrade
-helm_extra_set=${HELM_EXTRA_SET:-}
 
 # HELM_REPOSITORY overrides repository from package.json
 npm_package_helm_repository=${HELM_REPOSITORY:-${npm_package_helm_repository}}
@@ -81,7 +74,7 @@ case $context in
       echo "Minikube seems offline, exiting..."
       exit 1
     fi
-    eval $(minikube docker-env)
+    eval "$(minikube docker-env)"
     ENV="minikube"
     ;;
   docker-for-desktop)
@@ -121,24 +114,17 @@ else
   exit 1
 fi
 
-values=""
-if test -f ${helm_dir}/values-${ENV}.yaml; then
-  values="--values ${helm_dir}/values-${ENV}.yaml"
-fi
-
-echo "Using version=${version}, ENV=${ENV}, values=${values}, helm_extra_set=${helm_extra_set}"
-
 set -u
 set -e
 
-mkdir -p ${output_dir}
+mkdir -p "${output_dir}"
 
 alternativeDockerImages=""
 if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
   for i in "${alternative_docker_images[@]}"; do alternativeDockerImages+="$i,"; done
 fi
 
-cat <<EOF >${output_dir}/npm-helm-info.yaml
+cat <<EOF >"${output_dir}"/npm-helm-info.yaml
 helm:
   version: ${version}
   name: ${npm_package_helm_name}
@@ -146,6 +132,25 @@ helm:
   dockerImage: ${docker_image}
   alternativeDockerImages: ${alternativeDockerImages}
 EOF
+
+if [ "${npm_package_helm_verbose}" == "true" ]; then
+  cat <<EOF
+
+------ Configuration for npm-helm ------
+npm_package_helm_binary: ${npm_package_helm_binary}
+npm_package_helm_verbose: ${npm_package_helm_verbose}
+npm_package_helm_repository: ${npm_package_helm_repository}
+npm_package_helm_namespace: ${npm_package_helm_namespace}
+output_dir: ${output_dir}
+helm_dir: ${helm_dir}
+context: ${context}
+ENV: ${ENV}
+docker_image: ${docker_image}
+alternativeDockerImages: ${alternativeDockerImages}
+version: ${version}
+
+EOF
+fi
 
 for type in "$@"; do
   echo "Doing $type"
@@ -198,14 +203,24 @@ for type in "$@"; do
       ;;
 
     package)
+      debug=""
+      if [ "${npm_package_helm_verbose}" == "true" ]; then
+        debug="--debug"
+      fi
+
       echo "Creating helm chart for version ${version}"
-      helm lint ${helm_dir}/
-      helm package ${helm_dir}/ --destination ${output_dir} --version ${version} ${HELM_VERBOSE}
+      $npm_package_helm_binary $debug lint "${helm_dir}"/
+      $npm_package_helm_binary $debug package "${helm_dir}"/ --destination "${output_dir}" --version "${version}"
       ;;
 
     push)
+      debug=""
+      if [ "${npm_package_helm_verbose}" == "true" ]; then
+        debug="--debug"
+      fi
+
       echo "Pushing helm chart for version ${version}"
-      helm s3 push ${output_dir}/${npm_package_helm_name}-${version}.tgz ${npm_package_helm_repository}
+      $npm_package_helm_binary $debug s3 push "${output_dir}"/"${npm_package_helm_name}"-"${version}".tgz "${npm_package_helm_repository}"
       ;;
 
     install)
@@ -216,8 +231,19 @@ for type in "$@"; do
         helm_release_name="${npm_package_helm_name}"
       fi
 
-      echo "Installing helm chart with release-name=${helm_release_name}, version=${version}"
-      helm upgrade --install ${helm_release_name} ${output_dir}/${npm_package_helm_name}-${version}.tgz --namespace ${npm_package_helm_namespace} --recreate-pods --force --wait ${values} --set image.repository=${npm_package_helm_imageRepository} --set image.tag=${version} ${HELM_VERBOSE} ${helm_extra_set}
+      helm_args=()
+      if [ "${npm_package_helm_verbose}" == "true" ]; then
+        helm_args+=("--debug")
+      fi
+
+      if test -f "${helm_dir}"/values-${ENV}.yaml; then
+        helm_args+=(--values "${helm_dir}/values-${ENV}.yaml")
+      fi
+
+      helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${version}")
+
+      echo "Installing helm chart with release-name=${helm_release_name}, version=${version}, extra arguments:" "${helm_args[@]}"
+      $npm_package_helm_binary upgrade --install "${helm_release_name}" "${output_dir}"/"${npm_package_helm_name}"-"${version}".tgz --namespace "${npm_package_helm_namespace}" --atomic "${helm_args[@]}"
       ;;
 
     *)
