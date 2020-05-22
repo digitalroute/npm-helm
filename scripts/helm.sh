@@ -6,13 +6,13 @@ function get_version() {
   if [ -n "${VERSION-}" ]; then
     echo "${VERSION}"
   elif [ -n "${BUILD_ID-}" ]; then
-    echo "${npm_package_version}-${BUILD_ID}.$(git log -n 1 --pretty=format:'%h')"
+    echo "${npm_package_version}-${BUILD_ID}.g$(git log -n 1 --pretty=format:'%h')"
   elif [ "${ENV}" == "minikube" ]; then
     echo "${npm_package_version}-minikube"
   elif [ "${ENV}" == "docker-for-desktop" ]; then
     echo "${npm_package_version}-docker"
   else
-    echo "${npm_package_version}-$(git log -n 1 --pretty=format:'%h')"
+    echo "${npm_package_version}-g$(git log -n 1 --pretty=format:'%h')"
   fi
 }
 
