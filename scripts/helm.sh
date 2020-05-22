@@ -210,7 +210,7 @@ for type in "$@"; do
 
       echo "Creating helm chart for version ${version}"
       $npm_package_helm_binary $debug lint "${helm_dir}"/
-      $npm_package_helm_binary $debug package "${helm_dir}"/ --destination "${output_dir}" --version "${version}"
+      $npm_package_helm_binary $debug package "${helm_dir}"/ --destination "${output_dir}" --version "${version}" --app-version "${version}"
       ;;
 
     push)
