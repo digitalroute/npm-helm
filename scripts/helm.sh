@@ -240,6 +240,10 @@ for type in "$@"; do
         helm_args+=(--values "${helm_dir}/values-${ENV}.yaml")
       fi
 
+      if [ "${HELM_VALUES}" != "" ]; then
+        helm_args+=(--values "${HELM_VALUES}")
+      fi
+
       helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${version}")
 
       echo "Installing helm chart with release-name=${helm_release_name}, version=${version}, extra arguments:" "${helm_args[@]}"
