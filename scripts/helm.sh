@@ -240,7 +240,7 @@ for type in "$@"; do
         helm_args+=(--values "${helm_dir}/values-${ENV}.yaml")
       fi
 
-      if [ "${HELM_VALUES}" != "" ]; then
+      if [ -n "${HELM_VALUES+x}" ] && test -f "$HELM_VALUES"; then
         helm_args+=(--values "${HELM_VALUES}")
       fi
 
