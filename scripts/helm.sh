@@ -159,18 +159,18 @@ for type in "$@"; do
       echo "Building docker image ${docker_image}"
       docker_build_arguments=("--tag" "${docker_image}")
       if [ -n "${GITHUB_TOKEN-}" ]; then
-        echo "Found GITHUB_TOKEN"
+        echo "Found GITHUB_TOKEN - adding to build args"
         docker_build_arguments+=("--build-arg")
         docker_build_arguments+=("GITHUB_TOKEN=${GITHUB_TOKEN}")
       fi
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
-        echo "Found BITBUCKET_SSH_KEY"
+        echo "Found BITBUCKET_SSH_KEY - adding to build args"
         docker_build_arguments+=("--build-arg")
         docker_build_arguments+=("BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}")
       fi
       if [ -n "${PATH_TO_BITBUCKET_SSH_KEY-}" ]; then
         if test -f "${PATH_TO_BITBUCKET_SSH_KEY-}"; then
-          echo "Found PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY}"
+          echo "Found PATH_TO_BITBUCKET_SSH_KEY=${PATH_TO_BITBUCKET_SSH_KEY} - adding to build args"
           BITBUCKET_SSH_KEY=$(base64 "${PATH_TO_BITBUCKET_SSH_KEY}")
           docker_build_arguments+=("--build-arg")
           docker_build_arguments+=("BITBUCKET_SSH_KEY=${BITBUCKET_SSH_KEY}")
