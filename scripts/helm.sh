@@ -179,6 +179,11 @@ for type in "$@"; do
           exit 1
         fi
       fi
+      if [ -n "${NODE_VERSION-}" ]; then
+        echo "Found NODE_VERSION=${NODE_VERSION} - adding to build args"
+        docker_build_arguments+=("--build-arg")
+        docker_build_arguments+=("NODE_VERSION=${NODE_VERSION}")
+      fi
       docker build "${docker_build_arguments[@]}" "${base_dir}"
       echo "${docker_image}:${version}" > "${output_dir}/docker-image.txt"
 
