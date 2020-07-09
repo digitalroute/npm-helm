@@ -3,17 +3,49 @@
 set -u
 
 function get_version() {
-  if [ -n "${VERSION-}" ]; then
-    echo "${VERSION}"
-  elif [ -n "${BUILD_ID-}" ]; then
-    echo "${npm_package_version}-${BUILD_ID}.g$(git log -n 1 --pretty=format:'%h')"
-  elif [ "${ENV}" == "minikube" ]; then
-    echo "${npm_package_version}-minikube"
-  elif [ "${ENV}" == "docker-for-desktop" ]; then
-    echo "${npm_package_version}-docker"
+  local git_describe
+  git_describe=$(git describe --tag 2>/dev/null | sed 's/^v//')
+
+  local suffix
+  suffix=$(get_suffix)
+
+  if [[ "${npm_package_helm_version}" != "" ]]; then
+    echo "${npm_package_helm_version}"
+  elif [[ ! "${npm_package_version}" =~ "semantically-released" ]]; then
+    # If the version field in package.json contains a real version
+    # then use that
+    echo "${npm_package_version}${suffix}"
+  elif [ "${git_describe}" != "" ] ; then
+    # If we could describe with a tag, lets use that as version.
+    # Examples:
+    #   v1.3.0-development.5 - when there is a tag on HEAD
+    #   v1.3.0-development.4-1-g76e8032 - tag is one commit behind HEAD
+    echo "${git_describe}${suffix}"
   else
-    echo "${npm_package_version}-g$(git log -n 1 --pretty=format:'%h')"
+    echo "${npm_package_version}-g$(git describe --always)${suffix}"
   fi
+}
+
+function get_docker_tag() {
+  echo "$(git describe --always)$(get_suffix)"
+}
+
+function get_suffix() {
+  if [[ "${npm_package_helm_ci}" != "true" ]]; then
+    echo "-local"
+  fi
+}
+
+function write_package_info() {
+  mkdir -p "${output_dir}"
+  cat <<EOF >"${output_dir}"/npm-helm-info.yaml
+helm:
+  version: ${version}
+  name: ${npm_package_helm_name}
+  file: ${npm_package_helm_name}-${version}.tgz
+  dockerImage: ${npm_package_helm_imageRepository}
+  dockerTag: ${docker_tag}
+EOF
 }
 
 function check_npm_var() {
@@ -24,7 +56,7 @@ function check_npm_var() {
   fi
 }
 
-for var in npm_package_name npm_package_version npm_package_helm_name npm_package_helm_repository npm_package_helm_namespace; do
+for var in npm_package_name npm_package_version npm_package_helm_name npm_package_helm_repository npm_package_helm_namespace npm_package_helm_imageRepository; do
   check_npm_var $var
 done
 
@@ -40,31 +72,56 @@ fi
 
 base_dir=${INIT_CWD}
 output_dir="${base_dir}/output"
-helm_dir="${base_dir}/helm/${npm_package_helm_name}"
+helm_dir="${base_dir}/helm/${npm_package_helm_name:?}"
 
-npm_package_helm_binary=${HELM_BINARY:-${npm_package_helm_binary:-helm}}
+# NPM_HELM_REPOSITORY overrides repository from package.json
+npm_package_helm_repository=${NPM_HELM_REPOSITORY:-${npm_package_helm_repository}}
 
-npm_package_helm_verbose=${HELM_VERBOSE:-${npm_package_helm_verbose:-false}}
+# NPM_HELM_NAMESPACE overrides repository from package.json
+npm_package_helm_namespace=${NPM_HELM_NAMESPACE:-${npm_package_helm_namespace}}
 
-if [ -n "${npm_package_helm_internalDebug-}" ] && [ "${npm_package_helm_internalDebug}" == "true" ]; then
+## Non mandatory values (which means they have their defaults here):
+
+# NPM_HELM_BINARY overrides binary from package.json
+# Where is your helm binary? Defaults to helm but can be used to override to for example helm3
+npm_package_helm_binary=${NPM_HELM_BINARY:-${npm_package_helm_binary:-helm}}
+
+# NPM_HELM_VERBOSE overrides debug from package.json
+npm_package_helm_verbose=${NPM_HELM_VERBOSE:-${npm_package_helm_verbose:-false}}
+
+# NPM_HELM_DEBUG overrides debug from package.json
+npm_package_helm_debug=${NPM_HELM_DEBUG:-${npm_package_helm_debug:-false}}
+
+# NPM_HELM_CONTEXT_ANY overrides contextAny from package.json
+# Set to true to skip checks for which k8s context we're in
+npm_package_helm_context_any=${NPM_HELM_CONTEXT_ANY:-${npm_package_helm_context_any:-false}}
+
+# NPM_HELM_RELEASE_PREFIX overrides releasePrefix from package.json
+# Used to add a prefix on the installed helm chart, like we do for release-XXX
+npm_package_helm_releasePrefix=${NPM_HELM_RELEASE_PREFIX:-${npm_package_helm_releasePrefix:-}}
+
+# NPM_HELM_VALUES overrides values from package.json
+# Send in extra --values file to helm upgrade/install
+npm_package_helm_values=${NPM_HELM_VALUES:-${npm_package_helm_values:-}}
+
+# NPM_HELM_CI overrides ci from package.json
+# Used to indicate that we should treat this as a real release
+npm_package_helm_ci=${NPM_HELM_CI:-${npm_package_helm_ci:-false}}
+
+# NPM_HELM_VERSION overrides version from package.json
+# Used to indicate that we should treat this as a real release
+npm_package_helm_version=${NPM_HELM_VERSION:-${npm_package_helm_version:-}}
+
+if [ "${npm_package_helm_debug}" == "true" ]; then
   echo "NPM Helm debug set to true which does set -x in shell"
   set -x
 fi
 
-# HELM_REPOSITORY overrides repository from package.json
-npm_package_helm_repository=${HELM_REPOSITORY:-${npm_package_helm_repository}}
-
-# HELM_NAMESPACE overrides repository from package.json
-npm_package_helm_namespace=${HELM_NAMESPACE:-${npm_package_helm_namespace}}
-
-# HELM_IMAGE_REPOSITORY overrides repository from package.json
-npm_package_helm_imageRepository=${HELM_IMAGE_REPOSITORY:-${npm_package_helm_imageRepository}}
-
 context=$(kubectl config current-context 2>/dev/null || true)
-context_any=${HELM_CONTEXT_ANY:-false}
-if [ "${context_any}" != "true" ]; then
+
+if [ "${npm_package_helm_context_any}" != "true" ]; then
   if [ "${context}" != "minikube" ] && [ "${context}" != "docker-for-desktop" ]; then
-    echo "Kubernetes context needs to be set to minikube or docker-for-desktop, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using HELM_CONTEXT_ANY=true."
+    echo "Kubernetes context needs to be set to minikube or docker-for-desktop, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using NPM_HELM_CONTEXT_ANY=true."
     exit 1
   fi
 fi
@@ -72,8 +129,7 @@ fi
 case $context in
   minikube)
     echo "Context set to minikube!"
-    minikube status
-    if [ $? != 0 ]; then
+    if ! minikube status; then
       echo "Minikube seems offline, exiting..."
       exit 1
     fi
@@ -93,48 +149,12 @@ case $context in
 esac
 
 version=$(get_version)
-
-docker_image=""
-declare -a alternative_docker_images
-
-if [ -n "${npm_package_helm_imageRepositories_0+x}" ]; then
-  docker_image="${npm_package_helm_imageRepositories_0}:${version}"
-  # Loop and try to find elements from helm.imageRepositories.[] in packages.json
-  for i in 1 2 3 4 5; do
-    var="npm_package_helm_imageRepositories_${i}"
-    if [ -z ${!var+x} ]; then
-      # No more variables found, from the packages.json array
-      break
-    fi
-    alternative_docker_images+=("${!var}:${version}")
-  done
-
-elif [ -n "${npm_package_helm_imageRepository+x}" ]; then
-  docker_image="${npm_package_helm_imageRepository}:${version}"
-
-else
-  echo "Missing helm docker image repository in package.json"
-  exit 1
-fi
+docker_tag=$(get_docker_tag)
 
 set -u
 set -e
 
 mkdir -p "${output_dir}"
-
-alternativeDockerImages=""
-if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
-  for i in "${alternative_docker_images[@]}"; do alternativeDockerImages+="$i,"; done
-fi
-
-cat <<EOF >"${output_dir}"/npm-helm-info.yaml
-helm:
-  version: ${version}
-  name: ${npm_package_helm_name}
-  file: ${npm_package_helm_name}-${version}.tgz
-  dockerImage: ${docker_image}
-  alternativeDockerImages: ${alternativeDockerImages}
-EOF
 
 if [ "${npm_package_helm_verbose}" == "true" ]; then
   cat <<EOF
@@ -142,14 +162,16 @@ if [ "${npm_package_helm_verbose}" == "true" ]; then
 ------ Configuration for npm-helm ------
 npm_package_helm_binary: ${npm_package_helm_binary}
 npm_package_helm_verbose: ${npm_package_helm_verbose}
+npm_package_helm_debug: ${npm_package_helm_debug}
+npm_package_helm_context_any: ${npm_package_helm_context_any}
 npm_package_helm_repository: ${npm_package_helm_repository}
 npm_package_helm_namespace: ${npm_package_helm_namespace}
 output_dir: ${output_dir}
 helm_dir: ${helm_dir}
 context: ${context}
 ENV: ${ENV}
-docker_image: ${docker_image}
-alternativeDockerImages: ${alternativeDockerImages}
+docker_image: ${npm_package_helm_imageRepository}
+docker_tag=${docker_tag}
 version: ${version}
 
 EOF
@@ -159,8 +181,8 @@ for type in "$@"; do
   echo "Doing $type"
   case $type in
     docker-build)
-      echo "Building docker image ${docker_image}"
-      docker_build_arguments=("--tag" "${docker_image}")
+      echo "Building docker image ${npm_package_helm_imageRepository}:${docker_tag}"
+      docker_build_arguments=("--tag" "${npm_package_helm_imageRepository}:${docker_tag}")
       if [ -n "${GITHUB_TOKEN-}" ]; then
         echo "Found GITHUB_TOKEN - adding to build args"
         docker_build_arguments+=("--build-arg")
@@ -188,26 +210,14 @@ for type in "$@"; do
         docker_build_arguments+=("NODE_VERSION=${NODE_VERSION}")
       fi
       docker build "${docker_build_arguments[@]}" "${base_dir}"
-      echo "${docker_image}:${version}" > "${output_dir}/docker-image.txt"
-
-      # Create additional docker image tags if defined
-      if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
-        for i in "${alternative_docker_images[@]}"; do
-          docker tag "${docker_image}" "$i"
-        done
-      fi
       ;;
 
     docker-push)
-      echo "Pushing docker image ${docker_image}"
-      docker push "${docker_image}"
+      echo "Tagging docker image: ${npm_package_helm_imageRepository}:${docker_tag} -> ${npm_package_helm_imageRepository}:${version}"
+      docker tag "${npm_package_helm_imageRepository}:${docker_tag}" "${npm_package_helm_imageRepository}:${version}"
 
-      # Push additional docker image tags if defined
-      if [ -n "${alternative_docker_images+x}" ] && [ ${#alternative_docker_images[@]} -gt 0 ]; then
-        for i in "${alternative_docker_images[@]}"; do
-          docker push "$i"
-        done
-      fi
+      echo "Pushing docker image ${npm_package_helm_imageRepository}:${version}"
+      docker push "${npm_package_helm_imageRepository}:${version}"
       ;;
 
     package)
@@ -219,6 +229,7 @@ for type in "$@"; do
       echo "Creating helm chart for version ${version}"
       $npm_package_helm_binary $debug lint "${helm_dir}"/
       $npm_package_helm_binary $debug package "${helm_dir}"/ --destination "${output_dir}" --version "${version}" --app-version "${version}"
+      write_package_info
       ;;
 
     push)
@@ -232,11 +243,9 @@ for type in "$@"; do
       ;;
 
     install)
-      helm_release_prefix=${HELM_RELEASE_PREFIX:-}
-      if [ "${helm_release_prefix}" != "" ]; then
-        helm_release_name="${helm_release_prefix}-${npm_package_helm_name}"
-      else
-        helm_release_name="${npm_package_helm_name}"
+      helm_release_name="${npm_package_helm_name}"
+      if [ "${npm_package_helm_releasePrefix}" != "" ]; then
+        helm_release_name="${npm_package_helm_releasePrefix}-${npm_package_helm_name}"
       fi
 
       helm_args=()
@@ -248,11 +257,11 @@ for type in "$@"; do
         helm_args+=(--values "${helm_dir}/values-${ENV}.yaml")
       fi
 
-      if [ -n "${HELM_VALUES+x}" ] && test -f "$HELM_VALUES"; then
-        helm_args+=(--values "${HELM_VALUES}")
+      if [ "${npm_package_helm_values}" != "" ]; then
+        helm_args+=(--values "${npm_package_helm_values}")
       fi
 
-      helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${version}")
+      helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${docker_tag}")
 
       echo "Installing helm chart with release-name=${helm_release_name}, version=${version}, extra arguments:" "${helm_args[@]}"
       $npm_package_helm_binary upgrade --install "${helm_release_name}" "${output_dir}"/"${npm_package_helm_name}"-"${version}".tgz --namespace "${npm_package_helm_namespace}" --atomic "${helm_args[@]}"
