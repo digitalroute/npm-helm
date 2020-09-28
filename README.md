@@ -22,18 +22,14 @@ And add the following parts to your package.json
   },
 
   "scripts": {
-    "helm": "npm-helm docker-build package install",
-    "helm:docker-build": "npm-helm docker-build",
-    "helm:docker-push": "npm-helm docker-push",
-    "helm:package": "npm-helm package",
-    "helm:install": "npm-helm install",
-    "helm:push": "npm-helm push"
+    "helm": "npm-helm",
+    "helm-install": "npm-helm docker-build package install",
   },
 ```
 
 ## Configuration
 
-You can put sensible defaults in your package.json file and then override where apropriate with environment variables, like in CI/CD pipelines or for local development.
+You can put sensible defaults in your `package.json` file and then override where apropriate with environment variables, like in CI/CD pipelines or for local development. The `package.json` means inside the helm configuration.
 
 | Environment variable    | package.json   | Default   | Description                                                                       |
 | ----------------------- | -------------- | --------- | --------------------------------------------------------------------------------- |
@@ -47,3 +43,4 @@ You can put sensible defaults in your package.json file and then override where 
 | NPM_HELM_RELEASE_PREFIX | releasePrefix  | undefined | Set a prefix for the installed helm chart, like prefix-name                       |
 | NPM_HELM_VALUES         | values         | undefined | Add a values file to helm install/upgrade                                         |
 | NPM_HELM_CI             | ci             | false     | If set to true it will treat things like it is doing a proper release             |
+| NPM_HELM_VERSION        | version        | false     | Override the version inside `package.json` if needed                              |
