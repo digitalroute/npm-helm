@@ -66,7 +66,7 @@ if [ -z "${INIT_CWD-}" ]; then
 fi
 
 if [[ $1 == "" ]]; then
-  echo "Need to supply type (docker-build, docker-push, package, push, install)"
+  echo "Need to supply type (docker-build, docker-verify, docker-push, package, push, install)"
   exit 1
 fi
 
@@ -210,6 +210,13 @@ for type in "$@"; do
         docker_build_arguments+=("NODE_VERSION=${NODE_VERSION}")
       fi
       docker build "${docker_build_arguments[@]}" "${base_dir}"
+      ;;
+
+    docker-verify)
+      echo "Checking for docker image: ${npm_package_helm_imageRepository}:${docker_tag}"
+      if ! [[ $(docker images -q "${npm_package_helm_imageRepository}":"${docker_tag}") ]]; then
+        exit 1
+      fi
       ;;
 
     docker-push)
