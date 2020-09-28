@@ -65,8 +65,16 @@ if [ -z "${INIT_CWD-}" ]; then
   exit 1
 fi
 
-if [[ $1 == "" ]]; then
-  echo "Need to supply type (docker-build, docker-verify, docker-push, package, push, install)"
+if [ -z "${1-}" ]; then
+  echo "Need to supply type. Choose from the following..."
+  echo "docker-build: Build docker image"
+  echo "docker-verify: Check if needed docker image is present on host"
+  echo "docker-push: Push the docker image to the registry (needs docker login)"
+  echo "package: Create the helm package in the output folder"
+  echo "push: Pushes the helm chart to the S3 bucket (needs AWS keys)"
+  echo "install: Install the helm chart into kubernetes (needs KUBECONFIG)"
+  echo
+  echo "Maybe you're looking for the old 'npm run helm'? Please try 'npm run install' instead."
   exit 1
 fi
 
