@@ -10,12 +10,11 @@
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
-    "@digitalroute/cz-conventional-changelog-for-jira": "^4.1.4",
-    "@digitalroute/prettier-config": "^1.2.0",
-    "commitizen": "^4.0.3",
-    "cz-conventional-changelog": "^2.1.0",
-    "prettier": "^1.19.1",
-    "semantic-release": "^15.13.19"
+    "@digitalroute/cz-conventional-changelog-for-jira": "^5.0.1",
+    "@digitalroute/prettier-config": "^1.4.0",
+    "commitizen": "^4.2.1",
+    "prettier": "^2.0.5",
+    "semantic-release": "^17.1.2"
   },
   "prettier": "@digitalroute/prettier-config",
   "config": {
