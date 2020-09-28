@@ -74,7 +74,7 @@ if [ -z "${1-}" ]; then
   echo "push: Pushes the helm chart to the S3 bucket (needs AWS keys)"
   echo "install: Install the helm chart into kubernetes (needs KUBECONFIG)"
   echo
-  echo "Maybe you're looking for the old 'npm run helm'? Please try 'npm run install' instead."
+  echo "Maybe you're looking for the old 'npm run helm'? Please try 'npm run helm-install' instead."
   exit 1
 fi
 
