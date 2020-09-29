@@ -235,6 +235,11 @@ for type in "$@"; do
       docker push "${npm_package_helm_imageRepository}:${version}"
       ;;
 
+    write-package-info)
+      echo "Writing package info for version ${version}"
+      write_package_info
+      ;;
+
     package)
       debug=""
       if [ "${npm_package_helm_verbose}" == "true" ]; then
