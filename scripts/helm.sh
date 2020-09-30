@@ -189,7 +189,7 @@ helm_dir: ${helm_dir}
 context: ${context}
 ENV: ${ENV}
 docker_image: ${npm_package_helm_imageRepository}
-docker_tag=${docker_tag}
+docker_tag: ${docker_tag}
 version: ${version}
 
 EOF
@@ -291,7 +291,7 @@ for type in "$@"; do
         helm_args+=(--values "${npm_package_helm_values}")
       fi
 
-      helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${docker_tag}")
+      helm_args+=("--set" "image.repository=${npm_package_helm_imageRepository}" "--set" "image.tag=${version}")
 
       echo "Installing helm chart with release-name=${helm_release_name}, version=${version}, extra arguments:" "${helm_args[@]}"
       $npm_package_helm_binary upgrade --install "${helm_release_name}" "${output_dir}"/"${npm_package_helm_name}"-"${version}".tgz --namespace "${npm_package_helm_namespace}" --atomic "${helm_args[@]}"
