@@ -120,6 +120,9 @@ npm_package_helm_ci=${NPM_HELM_CI:-${npm_package_helm_ci:-false}}
 # Used to indicate that we should treat this as a real release
 npm_package_helm_version=${NPM_HELM_VERSION:-${npm_package_helm_version:-}}
 
+# NPM_HELM_IMAGE_REPOSITORY overrides repository from package.json
+npm_package_helm_imageRepository=${NPM_HELM_IMAGE_REPOSITORY:-${npm_package_helm_imageRepository}}
+
 if [ "${npm_package_helm_debug}" == "true" ]; then
   echo "NPM Helm debug set to true which does set -x in shell"
   set -x
