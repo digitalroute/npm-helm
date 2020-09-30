@@ -32,7 +32,11 @@ function get_docker_tag() {
 
 function get_suffix() {
   if [[ "${npm_package_helm_ci}" != "true" ]]; then
-    echo "-local"
+    if [[ ${npm_package_helm_buildId} != "" ]]; then
+      echo "-${npm_package_helm_buildId}"
+    else
+      echo "-local"
+    fi
   fi
 }
 
@@ -122,6 +126,9 @@ npm_package_helm_version=${NPM_HELM_VERSION:-${npm_package_helm_version:-}}
 
 # NPM_HELM_IMAGE_REPOSITORY overrides repository from package.json
 npm_package_helm_imageRepository=${NPM_HELM_IMAGE_REPOSITORY:-${npm_package_helm_imageRepository}}
+
+# NPM_HELM_BUILD_ID overrides buildId from package.json
+npm_package_helm_buildId=${NPM_HELM_BUILD_ID:-${npm_package_helm_buildId:-}}
 
 if [ "${npm_package_helm_debug}" == "true" ]; then
   echo "NPM Helm debug set to true which does set -x in shell"
