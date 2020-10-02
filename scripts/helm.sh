@@ -189,7 +189,7 @@ helm_dir: ${helm_dir}
 context: ${context}
 ENV: ${ENV}
 docker_image: ${npm_package_helm_imageRepository}
-docker_tag=${docker_tag}
+docker_tag: ${docker_tag}
 version: ${version}
 
 EOF
