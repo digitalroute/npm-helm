@@ -1,6 +1,11 @@
 {
   "name": "@digitalroute/npm-helm",
   "version": "0.0.0-semantically-released",
+  "homepage": "https://github.com/digitalroute/npm-helm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalroute/npm-helm.git"
+  },
   "bin": {
     "npm-helm": "scripts/helm.sh"
   },
