@@ -4,7 +4,7 @@ set -u
 
 function get_version() {
   local git_describe
-  git_describe=$(git describe --tag 2>/dev/null | sed 's/^v//')
+  git_describe=$(git describe --tag --match 'v*' 2>/dev/null | sed 's/^v//')
 
   local suffix
   suffix=$(get_suffix)
@@ -22,19 +22,19 @@ function get_version() {
     #   v1.3.0-development.4-1-g76e8032 - tag is one commit behind HEAD
     echo "${git_describe}${suffix}"
   else
-    echo "${npm_package_version}-g$(git describe --always)${suffix}"
+    echo "${npm_package_version//-semantically-released/}-g$(git rev-parse --short HEAD)${suffix}"
   fi
 }
 
 function get_docker_tag() {
-  echo "$(git describe --always)$(get_suffix)"
+  echo "$(git rev-parse --short HEAD)$(get_suffix)"
 }
 
 function get_suffix() {
-  if [[ "${npm_package_helm_ci}" != "true" ]]; then
-    if [[ ${npm_package_helm_buildId} != "" ]]; then
-      echo "-${npm_package_helm_buildId}"
-    else
+  if [[ ${npm_package_helm_buildId} != "" ]]; then
+    echo "-${npm_package_helm_buildId}"
+  else
+    if [[ "${npm_package_helm_ci}" != "true" ]]; then
       echo "-local"
     fi
   fi
