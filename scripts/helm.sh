@@ -297,6 +297,16 @@ for type in "$@"; do
       $npm_package_helm_binary upgrade --install "${helm_release_name}" "${output_dir}"/"${npm_package_helm_name}"-"${version}".tgz --namespace "${npm_package_helm_namespace}" --atomic "${helm_args[@]}"
       ;;
 
+    cache-node-modules)
+      add_to_build_dir="${base_dir}/add-to-build"
+      mkdir -p "$add_to_build_dir"
+
+      version_found=$(git describe --tags --abbrev=0 | sed 's/^v//')
+      echo "Pulling image: ${npm_package_helm_imageRepository}:${version_found}"
+      docker pull "${npm_package_helm_imageRepository}":"${version_found}"
+      docker run --rm "${npm_package_helm_imageRepository}":"${version_found}" tar --create --verbose --gzip --file - node_modules/ > "${add_to_build_dir}"/node_modules.tar.gz
+      ;;
+
     *)
       echo "Type=${type} not supported"
       ;;
