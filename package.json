@@ -19,7 +19,7 @@
     "@digitalroute/prettier-config": "^1.4.0",
     "commitizen": "^4.2.1",
     "prettier": "^2.0.5",
-    "semantic-release": "^17.1.2"
+    "semantic-release": "^17.2.3"
   },
   "prettier": "@digitalroute/prettier-config",
   "config": {
