@@ -46,3 +46,4 @@ You can put sensible defaults in your `package.json` file and then override wher
 | NPM_HELM_VERSION          | version         | false     | Override the version inside `package.json` if needed                              |
 | NPM_HELM_IMAGE_REPOSITORY | imageRepository | undefined | Override the docker image repository                                              |
 | NPM_HELM_BUILD_ID         | buildId         | undefined | Override the build id                                                             |
+| NPM_HELM_PUSH_DOCKER_TAG  | pushDockerTag   | false     | Push the original docker tag created, not the calculated version                  |

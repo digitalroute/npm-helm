@@ -116,6 +116,10 @@ npm_package_helm_releasePrefix=${NPM_HELM_RELEASE_PREFIX:-${npm_package_helm_rel
 # Send in extra --values file to helm upgrade/install
 npm_package_helm_values=${NPM_HELM_VALUES:-${npm_package_helm_values:-}}
 
+# NPM_HELM_PUSH_DOCKER_TAG overrides values from package.json
+# Push the original docker tag image instead of the calculated version
+npm_package_helm_push_docker_tag=${NPM_HELM_PUSH_DOCKER_TAG:-${npm_package_helm_push_docker_tag:-false}}
+
 # NPM_HELM_CI overrides ci from package.json
 # Used to indicate that we should treat this as a real release
 npm_package_helm_ci=${NPM_HELM_CI:-${npm_package_helm_ci:-false}}
@@ -238,11 +242,16 @@ for type in "$@"; do
       ;;
 
     docker-push)
-      echo "Tagging docker image: ${npm_package_helm_imageRepository}:${docker_tag} -> ${npm_package_helm_imageRepository}:${version}"
-      docker tag "${npm_package_helm_imageRepository}:${docker_tag}" "${npm_package_helm_imageRepository}:${version}"
+      if [ "${npm_package_helm_push_docker_tag}" == true ]; then
+        echo "Pushing priginal docker image tag ${npm_package_helm_imageRepository}:${docker_tag}"
+        docker push "${npm_package_helm_imageRepository}:${docker_tag}"
+      else
+        echo "Tagging docker image: ${npm_package_helm_imageRepository}:${docker_tag} -> ${npm_package_helm_imageRepository}:${version}"
+        docker tag "${npm_package_helm_imageRepository}:${docker_tag}" "${npm_package_helm_imageRepository}:${version}"
 
-      echo "Pushing docker image ${npm_package_helm_imageRepository}:${version}"
-      docker push "${npm_package_helm_imageRepository}:${version}"
+        echo "Pushing docker image ${npm_package_helm_imageRepository}:${version}"
+        docker push "${npm_package_helm_imageRepository}:${version}"
+      fi
       ;;
 
     write-package-info)
