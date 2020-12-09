@@ -266,9 +266,18 @@ for type in "$@"; do
       fi
 
       echo "Creating helm chart for version ${version}"
-      $npm_package_helm_binary $debug lint "${helm_dir}"/
       $npm_package_helm_binary $debug package "${helm_dir}"/ --destination "${output_dir}" --version "${version}" --app-version "${version}"
       write_package_info
+      ;;
+
+    lint)
+      debug=""
+      if [ "${npm_package_helm_verbose}" == "true" ]; then
+        debug="--debug"
+      fi
+
+      echo "Creating helm chart for version ${version}"
+      $npm_package_helm_binary $debug lint "${helm_dir}"/
       ;;
 
     push)
