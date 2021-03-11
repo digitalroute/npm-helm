@@ -210,6 +210,11 @@ for type in "$@"; do
         docker_build_arguments+=("--build-arg")
         docker_build_arguments+=("GITHUB_TOKEN=${GITHUB_TOKEN}")
       fi
+      if [ -n "${CODEARTIFACT_AUTH_TOKEN-}" ]; then
+        echo "Found CODEARTIFACT_AUTH_TOKEN - adding to build args"
+        docker_build_arguments+=("--build-arg")
+        docker_build_arguments+=("CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}")
+      fi
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
         echo "Found BITBUCKET_SSH_KEY - adding to build args"
         docker_build_arguments+=("--build-arg")
