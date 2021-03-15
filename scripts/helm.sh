@@ -215,6 +215,11 @@ for type in "$@"; do
         docker_build_arguments+=("--build-arg")
         docker_build_arguments+=("CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}")
       fi
+      if [ -n "${NPM_CONFIG_REGISTRY-}" ]; then
+        echo "Found NPM_CONFIG_REGISTRY - adding to build args"
+        docker_build_arguments+=("--build-arg")
+        docker_build_arguments+=("NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY}")
+      fi
       if [ -n "${BITBUCKET_SSH_KEY-}" ]; then
         echo "Found BITBUCKET_SSH_KEY - adding to build args"
         docker_build_arguments+=("--build-arg")
