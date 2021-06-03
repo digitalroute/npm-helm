@@ -10,15 +10,17 @@ Like usual:
 npm install @digitalroute/npm-helm --save-dev
 ```
 
-And add the following parts to your package.json
+And add the following parts to your package.json (you may already have a config section, so add it inside there if you already have it.)
 
 ```jsonc
-  "helm": {
-    "name": "<name-of-service>",
-    "repository": "<helm-repo-name>",
-    "namespace": "<kubernetes-namespace>",
-    "imageRepository": "<docker-registry-for-image>",
-    "binary": "<helm-binary-to-use>"
+  "config": {
+    "helm": {
+      "name": "<name-of-service>",
+      "repository": "<helm-repo-name>",
+      "namespace": "<kubernetes-namespace>",
+      "imageRepository": "<docker-registry-for-image>",
+      "binary": "<helm-binary-to-use>"
+    },
   },
 
   "scripts": {
