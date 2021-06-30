@@ -142,11 +142,14 @@ fi
 context=$(kubectl config current-context 2>/dev/null || true)
 
 if [ "${npm_package_config_helm_context_any}" != "true" ]; then
-  if [ "${context}" != "minikube" ] && [ "${context}" != "docker-for-desktop" ]; then
-    echo "Kubernetes context needs to be set to minikube or docker-for-desktop, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using NPM_HELM_CONTEXT_ANY=true."
+  if [ "${context}" != "minikube" ] && [ "${context}" != "minikube-on-aws" ]; then
+    echo "Kubernetes context needs to be set to minikube or minikube-on-aws, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using NPM_HELM_CONTEXT_ANY=true."
     exit 1
   fi
 fi
+
+# The helm --value files that we need to use, in order of importance since helm overrides from left -> right for the command line args
+value_files=()
 
 case $context in
   minikube)
@@ -156,17 +159,15 @@ case $context in
       exit 1
     fi
     eval "$(minikube docker-env)"
-    ENV="minikube"
+    value_files=('values-minikube.yaml')
     ;;
-  docker-for-desktop)
-    echo "Context set to docker-for-desktop!"
-    ENV="docker-for-desktop"
+  minikube-on-aws)
+    echo "Context set to minikube-on-aws"
+    export DOCKER_HOST="ssh://ubuntu@docker.dazzler.minikube"
+    value_files=('values-minikube.yaml' 'values-minikube-on-aws.yaml')
     ;;
   *)
     echo "Context set to $context"
-    if [ -z "${ENV-}" ]; then
-      ENV="dev"
-    fi
     ;;
 esac
 
@@ -192,7 +193,6 @@ npm_package_config_helm_namespace: ${npm_package_config_helm_namespace}
 output_dir: ${output_dir}
 helm_dir: ${helm_dir}
 context: ${context}
-ENV: ${ENV}
 docker_image: ${npm_package_config_helm_imageRepository}
 docker_tag: ${docker_tag}
 version: ${version}
@@ -312,9 +312,12 @@ for type in "$@"; do
         helm_args+=("--debug")
       fi
 
-      if test -f "${helm_dir}"/values-${ENV}.yaml; then
-        helm_args+=(--values "${helm_dir}/values-${ENV}.yaml")
-      fi
+      for values_file in "${value_files[@]}"; do
+        if test -f "${helm_dir}/${values_file}"; then
+          echo "Adding $values_file as --values argument"
+          helm_args+=(--values "${helm_dir}/${values_file}")
+        fi
+      done
 
       if [ "${npm_package_config_helm_values}" != "" ]; then
         helm_args+=(--values "${npm_package_config_helm_values}")
