@@ -266,7 +266,7 @@ for type in "$@"; do
       ;;
 
     ecr-login)
-      if aws --version | grep '^aws-cli/2' >/dev/null; then
+      if aws --version | grep '^aws-cli/1' >/dev/null; then
         echo "Found aws cli v1, doing docker login in the old way"
         eval "aws ecr get-login --no-include-email"
       else
