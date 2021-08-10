@@ -265,6 +265,18 @@ for type in "$@"; do
       fi
       ;;
 
+    ecr-login)
+      if aws --version | grep '^aws-cli/2' >/dev/null; then
+        echo "Found aws cli v1, doing docker login in the old way"
+        eval "aws ecr get-login --no-include-email"
+      else
+        region=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '.' -f 4)
+        server=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '/' -f 1)
+        echo "Found aws cli v2 or more, doing docker login the new way. Parsed region=${region}, server=${server}"
+        aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${server}"
+      fi
+      ;;
+
     write-package-info)
       echo "Writing package info for version ${version}"
       write_package_info
