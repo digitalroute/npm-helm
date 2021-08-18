@@ -266,13 +266,21 @@ for type in "$@"; do
       ;;
 
     ecr-login)
-      if aws --version | grep '^aws-cli/1' >/dev/null; then
-        echo "Found aws cli v1, doing docker login in the old way"
+      aws_cli_version=$(aws --version 2>&1 | grep '^aws-cli/' | sed -e 's/^aws-cli\///' -e 's/ Python.*//')
+      if [ "${aws_cli_version}" == "" ]; then
+        echo "Could not parse aws cli, is it installed? we should support v1 and v2"
+        exit 1
+      fi
+
+      aws_cli_version_major=$(echo "${aws_cli_version}" | cut -d '.' -f 1)
+      aws_cli_version_minor=$(echo "${aws_cli_version}" | cut -d '.' -f 2)
+      if [ "${aws_cli_version_major}" -eq 1 ] && [ "${aws_cli_version_minor}" -le 17 ]; then
+        echo "Found legacy aws cli, v${aws_cli_version}, doing docker login in the old way"
         eval "aws ecr get-login --no-include-email"
       else
         region=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '.' -f 4)
         server=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '/' -f 1)
-        echo "Found aws cli v2 or more, doing docker login the new way. Parsed region=${region}, server=${server}"
+        echo "Found newer aws cli, v${aws_cli_version}, doing docker login the new way. Parsed region=${region}, server=${server}"
         aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${server}"
       fi
       ;;
