@@ -281,7 +281,7 @@ for type in "$@"; do
         region=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '.' -f 4)
         server=$(echo "${npm_package_config_helm_imageRepository}" | cut -d '/' -f 1)
         echo "Found newer aws cli, v${aws_cli_version}, doing docker login the new way. Parsed region=${region}, server=${server}"
-        aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${server}"
+        docker login --username AWS --password "$(aws ecr get-login-password --region ${region})" "${server}"
       fi
       ;;
 
