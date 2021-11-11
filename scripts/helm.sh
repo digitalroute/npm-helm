@@ -141,6 +141,10 @@ fi
 
 context=$(kubectl config current-context 2>/dev/null || true)
 
+if [ "${npm_package_config_helm_ci}" == "true" ]; then
+  npm_package_config_helm_context_any="true"
+fi
+
 if [ "${npm_package_config_helm_context_any}" != "true" ]; then
   if [ "${context}" != "minikube" ] && [ "${context}" != "minikube-on-aws" ]; then
     echo "Kubernetes context needs to be set to minikube or minikube-on-aws, it's currently set to ${context}. Refusing to do anything. If you're absolutely sure you know what you're doing, you can override this using NPM_HELM_CONTEXT_ANY=true."
