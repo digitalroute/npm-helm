@@ -347,7 +347,9 @@ for type in "$@"; do
         helm_args+=(--values "${npm_package_config_helm_values}")
       fi
 
-      helm_args+=("--set" "image.repository=${npm_package_config_helm_imageRepository}" "--set" "image.tag=${docker_tag}")
+      if [ "${npm_package_config_helm_ci}" != "true" ]; then
+        helm_args+=("--set" "image.repository=${npm_package_config_helm_imageRepository}" "--set" "image.tag=${docker_tag}")
+      fi
 
       echo "Installing helm chart with release-name=${helm_release_name}, version=${version}, extra arguments:" "${helm_args[@]}"
       $npm_package_config_helm_binary upgrade --install "${helm_release_name}" "${output_dir}"/"${npm_package_config_helm_name}"-"${version}".tgz --namespace "${npm_package_config_helm_namespace}" --atomic "${helm_args[@]}"
