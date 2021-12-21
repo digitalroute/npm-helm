@@ -311,7 +311,7 @@ for type in "$@"; do
         debug="--debug"
       fi
 
-      echo "Creating helm chart for version ${version}"
+      echo "Running helm lint for version ${version}"
       $npm_package_config_helm_binary $debug lint "${helm_dir}"/
       ;;
 
