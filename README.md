@@ -1,3 +1,7 @@
+# This repo has been archived as per DOT-1167.
+## Please Raise a request to DOT-team if this repo needs new contributions
+
+
 # npm-helm
 
 Helm helper module for nodejs
